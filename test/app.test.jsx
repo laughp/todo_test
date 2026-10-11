@@ -4,11 +4,16 @@ import userEvent from "@testing-library/user-event";
 
 import App from "../src/App.jsx";
 
-function addTodo(user, { title, dueDate = "2026-10-15" }) {
+function addTodo(user, { title, dueDate = "2026-10-15", category } = {}) {
   return user.type(screen.getByLabelText("Title"), title).then(() => {
     fireEvent.change(screen.getByLabelText("Due date"), {
       target: { value: dueDate },
     });
+    if (category !== undefined) {
+      fireEvent.change(screen.getByLabelText("Category"), {
+        target: { value: category },
+      });
+    }
     return user.click(screen.getByRole("button", { name: "Add todo" }));
   });
 }
@@ -32,13 +37,31 @@ describe("Todo App GUI", () => {
     expect(within(item).getByText("2026-10-15")).toBeInTheDocument();
   });
 
-  test("clears the form after adding a todo", async () => {
+  test("adds a todo with a category", async () => {
+    const user = userEvent.setup();
+
+    await addTodo(user, { title: "Buy milk", category: "Groceries" });
+
+    const item = screen.getByRole("listitem");
+    expect(within(item).getByText("Groceries")).toBeInTheDocument();
+  });
+
+  test("omits the category when none is given", async () => {
     const user = userEvent.setup();
 
     await addTodo(user, { title: "Buy milk" });
 
+    expect(screen.queryByText("Groceries")).not.toBeInTheDocument();
+  });
+
+  test("clears the form after adding a todo", async () => {
+    const user = userEvent.setup();
+
+    await addTodo(user, { title: "Buy milk", category: "Groceries" });
+
     expect(screen.getByLabelText("Title")).toHaveValue("");
     expect(screen.getByLabelText("Due date")).toHaveValue("");
+    expect(screen.getByLabelText("Category")).toHaveValue("");
   });
 
   test("shows an error instead of adding an invalid todo", async () => {
