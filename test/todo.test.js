@@ -1,6 +1,7 @@
 import { test } from "vitest";
 import assert from "node:assert/strict";
 
+
 import { createTodo, reorderTodos } from "../src/todo.js";
 
 function titles(todos) {
@@ -60,6 +61,7 @@ test("rejects a missing or invalid due date", () => {
   assert.throws(() => createTodo({ title: "Buy milk", dueDate: null }), TypeError);
   assert.throws(() => createTodo({ title: "Buy milk", dueDate: "not a date" }), TypeError);
 });
+
 
 test("moves a todo down by dragging it later in the list", () => {
   const todos = [
@@ -133,3 +135,4 @@ test("rejects out-of-bounds or non-integer indices", () => {
   assert.throws(() => reorderTodos(todos, 0.5, 1), RangeError);
   assert.throws(() => reorderTodos(todos, 0, "1"), RangeError);
 });
+
