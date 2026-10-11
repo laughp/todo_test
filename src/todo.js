@@ -1,12 +1,23 @@
-export function createTodo({ title, dueDate, category = "" } = {}) {
+export function parseOptionalDate(value, name) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new TypeError(`${name} must be a valid date`);
+  }
+
+  return parsed;
+}
+
+export function createTodo({ title, dueDate, deferralDate, category = "" } = {}) {
   if (typeof title !== "string" || title.trim() === "") {
     throw new TypeError("title must be a non-empty string");
   }
 
-  const parsedDueDate = new Date(dueDate);
-  if (dueDate == null || Number.isNaN(parsedDueDate.getTime())) {
-    throw new TypeError("dueDate must be a valid date");
-  }
+  const parsedDueDate = parseOptionalDate(dueDate, "dueDate");
+  const parsedDeferralDate = parseOptionalDate(deferralDate, "deferralDate");
 
   if (typeof category !== "string") {
     throw new TypeError("category must be a string");
@@ -15,9 +26,30 @@ export function createTodo({ title, dueDate, category = "" } = {}) {
   return {
     title: title.trim(),
     dueDate: parsedDueDate,
+    deferralDate: parsedDeferralDate,
     category: category.trim(),
     done: false,
   };
+}
+
+export function isDeferred(todo, now = new Date()) {
+  return todo.deferralDate != null && todo.deferralDate.getTime() > now.getTime();
+}
+
+export function splitByDeferral(todos, now = new Date()) {
+  const active = [];
+  const deferred = [];
+
+  todos.forEach((todo, index) => {
+    const entry = { todo, index };
+    if (isDeferred(todo, now)) {
+      deferred.push(entry);
+    } else {
+      active.push(entry);
+    }
+  });
+
+  return { active, deferred };
 }
 
 export function reorderTodos(todos, fromIndex, toIndex) {

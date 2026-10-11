@@ -4,11 +4,21 @@ import userEvent from "@testing-library/user-event";
 
 import App from "../src/App.jsx";
 
-function addTodo(user, { title, dueDate = "2026-10-15", category } = {}) {
+function addTodo(user, options = {}) {
+  const { title, deferralDate, category } = options;
+  const dueDate = options.dueDate === undefined ? "2026-10-15" : options.dueDate;
+
   return user.type(screen.getByLabelText("Title"), title).then(() => {
-    fireEvent.change(screen.getByLabelText("Due date"), {
-      target: { value: dueDate },
-    });
+    if (dueDate !== undefined) {
+      fireEvent.change(screen.getByLabelText("Due date"), {
+        target: { value: dueDate },
+      });
+    }
+    if (deferralDate !== undefined) {
+      fireEvent.change(screen.getByLabelText("Defer until"), {
+        target: { value: deferralDate },
+      });
+    }
     if (category !== undefined) {
       fireEvent.change(screen.getByLabelText("Category"), {
         target: { value: category },
@@ -57,11 +67,51 @@ describe("Todo App GUI", () => {
   test("clears the form after adding a todo", async () => {
     const user = userEvent.setup();
 
-    await addTodo(user, { title: "Buy milk", category: "Groceries" });
+    await addTodo(user, {
+      title: "Buy milk",
+      category: "Groceries",
+      deferralDate: "2026-10-20",
+    });
 
     expect(screen.getByLabelText("Title")).toHaveValue("");
     expect(screen.getByLabelText("Due date")).toHaveValue("");
+    expect(screen.getByLabelText("Defer until")).toHaveValue("");
     expect(screen.getByLabelText("Category")).toHaveValue("");
+  });
+
+  test("adds a todo without a due date", async () => {
+    const user = userEvent.setup();
+
+    await addTodo(user, { title: "Buy milk", dueDate: "" });
+
+    const item = screen.getByRole("listitem");
+    expect(within(item).getByText("Buy milk")).toBeInTheDocument();
+    expect(item.querySelector(".todo-due")).toBeNull();
+  });
+
+  test("keeps a deferred todo out of the active list until its date", async () => {
+    const user = userEvent.setup();
+
+    await addTodo(user, { title: "Someday", deferralDate: "2999-01-01" });
+
+    expect(screen.queryByText("No todos yet. Add one above.")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Deferred" })).toBeInTheDocument();
+
+    const deferredSection = screen
+      .getByRole("heading", { name: "Deferred" })
+      .closest("section");
+    expect(within(deferredSection).getByText("Someday")).toBeInTheDocument();
+    expect(screen.getByText("0 of 0 remaining")).toBeInTheDocument();
+  });
+
+  test("counts a past deferral date as active", async () => {
+    const user = userEvent.setup();
+
+    await addTodo(user, { title: "Due now", deferralDate: "2000-01-01" });
+
+    expect(screen.queryByRole("heading", { name: "Deferred" })).not.toBeInTheDocument();
+    expect(screen.getByRole("listitem")).toHaveTextContent("Due now");
+    expect(screen.getByText("1 of 1 remaining")).toBeInTheDocument();
   });
 
   test("shows an error instead of adding an invalid todo", async () => {
