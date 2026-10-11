@@ -6,16 +6,18 @@ export default function App() {
   const [todos, setTodos] = useState([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [category, setCategory] = useState("");
   const [error, setError] = useState("");
 
   function handleSubmit(event) {
     event.preventDefault();
 
     try {
-      const todo = createTodo({ title, dueDate });
+      const todo = createTodo({ title, dueDate, category });
       setTodos((current) => [...current, todo]);
       setTitle("");
       setDueDate("");
+      setCategory("");
       setError("");
     } catch (err) {
       setError(err.message);
@@ -63,6 +65,15 @@ export default function App() {
           onChange={(event) => setDueDate(event.target.value)}
         />
 
+        <label htmlFor="todo-category">Category</label>
+        <input
+          id="todo-category"
+          type="text"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          placeholder="e.g. Work"
+        />
+
         <button type="submit">Add todo</button>
       </form>
 
@@ -91,6 +102,10 @@ export default function App() {
               <span className="todo-due">
                 {todo.dueDate.toISOString().slice(0, 10)}
               </span>
+
+              {todo.category ? (
+                <span className="todo-category">{todo.category}</span>
+              ) : null}
 
               <div className="todo-actions">
                 <button

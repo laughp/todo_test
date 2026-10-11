@@ -68,6 +68,13 @@ h1 {
   font-size: 0.875rem;
 }
 
+.todo-category {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, CanvasText 12%, transparent);
+  font-size: 0.75rem;
+}
+
 .todo-actions {
   display: flex;
   gap: 0.25rem;

@@ -13,7 +13,27 @@ test("creates a todo with a title, due date, and not-done state", () => {
 
   assert.equal(todo.title, "Buy milk");
   assert.equal(todo.dueDate.getTime(), dueDate.getTime());
+  assert.equal(todo.category, "");
   assert.equal(todo.done, false);
+});
+
+test("accepts an optional category and trims it", () => {
+  const todo = createTodo({ title: "Buy milk", dueDate: "2026-10-15", category: "  Work  " });
+
+  assert.equal(todo.category, "Work");
+});
+
+test("defaults the category to an empty string when omitted", () => {
+  const todo = createTodo({ title: "Buy milk", dueDate: "2026-10-15" });
+
+  assert.equal(todo.category, "");
+});
+
+test("rejects a non-string category", () => {
+  assert.throws(
+    () => createTodo({ title: "Buy milk", dueDate: "2026-10-15", category: 42 }),
+    TypeError
+  );
 });
 
 test("accepts a due date given as an ISO string", () => {

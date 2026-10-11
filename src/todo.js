@@ -1,4 +1,4 @@
-export function createTodo({ title, dueDate } = {}) {
+export function createTodo({ title, dueDate, category = "" } = {}) {
   if (typeof title !== "string" || title.trim() === "") {
     throw new TypeError("title must be a non-empty string");
   }
@@ -8,9 +8,14 @@ export function createTodo({ title, dueDate } = {}) {
     throw new TypeError("dueDate must be a valid date");
   }
 
+  if (typeof category !== "string") {
+    throw new TypeError("category must be a string");
+  }
+
   return {
     title: title.trim(),
     dueDate: parsedDueDate,
+    category: category.trim(),
     done: false,
   };
 }
