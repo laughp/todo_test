@@ -97,4 +97,39 @@ describe("Todo App GUI", () => {
 
     expect(screen.getByText("1 of 2 remaining")).toBeInTheDocument();
   });
+
+  test("hides the timeline until it is enabled", () => {
+    expect(screen.queryByRole("list", { name: "Week timeline" })).not.toBeInTheDocument();
+  });
+
+  test("shows a seven day timeline when enabled", async () => {
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("checkbox", { name: /show week timeline/i }));
+
+    const timeline = screen.getByRole("list", { name: "Week timeline" });
+    expect(within(timeline).getAllByRole("listitem")).toHaveLength(7);
+  });
+
+  test("places a todo on its due day in the timeline", async () => {
+    const user = userEvent.setup();
+    const today = new Date().toISOString().slice(0, 10);
+
+    await addTodo(user, { title: "Buy milk", dueDate: today });
+    await user.click(screen.getByRole("checkbox", { name: /show week timeline/i }));
+
+    const timeline = screen.getByRole("list", { name: "Week timeline" });
+    expect(within(timeline).getByText("Buy milk")).toBeInTheDocument();
+  });
+
+  test("hides the timeline again when disabled", async () => {
+    const user = userEvent.setup();
+    const toggle = screen.getByRole("checkbox", { name: /show week timeline/i });
+
+    await user.click(toggle);
+    expect(screen.getByRole("list", { name: "Week timeline" })).toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(screen.queryByRole("list", { name: "Week timeline" })).not.toBeInTheDocument();
+  });
 });

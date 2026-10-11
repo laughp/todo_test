@@ -1,12 +1,13 @@
 import { useState } from "react";
 
-import { createTodo, reorderTodos } from "./todo.js";
+import { buildWeekTimeline, createTodo, reorderTodos } from "./todo.js";
 
 export default function App() {
   const [todos, setTodos] = useState([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
+  const [showTimeline, setShowTimeline] = useState(false);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -125,6 +126,58 @@ export default function App() {
       <p className="count" aria-live="polite">
         {todos.filter((todo) => !todo.done).length} of {todos.length} remaining
       </p>
+
+      <section className="timeline">
+        <label className="timeline-toggle">
+          <input
+            type="checkbox"
+            checked={showTimeline}
+            onChange={(event) => setShowTimeline(event.target.checked)}
+          />
+          Show week timeline
+        </label>
+
+        {showTimeline ? (
+          <ol className="timeline-days" aria-label="Week timeline">
+            {buildWeekTimeline(todos).map((day) => (
+              <li
+                key={day.key}
+                className={[
+                  "timeline-day",
+                  day.isToday ? "today" : "",
+                  day.isPast ? "past" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <span className="timeline-day-label">
+                  {day.date.toLocaleDateString(undefined, {
+                    weekday: "short",
+                    timeZone: "UTC",
+                  })}
+                </span>
+                <span className="timeline-day-date">{day.key.slice(5)}</span>
+                <ul className="timeline-day-todos">
+                  {day.todos.map((todo, index) => (
+                    <li
+                      key={index}
+                      className={[
+                        "timeline-todo",
+                        todo.done ? "done" : "",
+                        day.isPast && !todo.done ? "missed" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      {todo.title}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </section>
     </main>
   );
 }
